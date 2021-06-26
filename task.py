@@ -59,7 +59,6 @@ def get_ref_amount_sum(child_element):
 def process_file():
     """
     Process file
-
   """
     try:
         for entry in vouchers:
@@ -67,7 +66,7 @@ def process_file():
             formatted_date = unformatted_date.strftime(new_date_format)
             parent_transaction_type = 'Parent'
             parent_amount = float(entry.find('./ALLLEDGERENTRIES.LIST/AMOUNT').text)  # Amount header
-            vch_no = int(entry.find('VOUCHERNUMBER').text)
+            vch_no = entry.find('VOUCHERNUMBER').text
             parent_ref_no = 'NA'
             parent_ref_type = 'NA'
             parent_ref_date = 'NA'
@@ -89,7 +88,7 @@ def process_file():
             data_list.append(
                 [formatted_date, parent_transaction_type, vch_no, parent_ref_no, parent_ref_type, parent_ref_date,
                  debtor,
-                 parent_ref_amount, parent_amount, parent_particulars, vch_type, amount_verified])
+                 parent_ref_amount, f'{parent_amount:.2f}', parent_particulars, vch_type, amount_verified])
 
             for child in child_elements:  # last entry is for other type
 
@@ -110,7 +109,7 @@ def process_file():
                         data_list.append(
                             [formatted_date, child_trans_type, vch_no, child_ref_no, child_ref_type, child_ref_date,
                              child_debtor
-                                , child_ref_amount, child_amount, child_particulars, child_recipt_type,
+                                , f'{child_ref_amount:.2f}', child_amount, child_particulars, child_recipt_type,
                              child_amount_verified])
                 elif other_or_child == 'Yes':  # other entry
                     other_debtor = child.find('LEDGERNAME').text
@@ -125,7 +124,7 @@ def process_file():
                     data_list.append(
                         [formatted_date, other_trans_type, vch_no, other_ref_no, other_ref_type, other_ref_date,
                          other_debtor,
-                         other_ref_amount, other_amount, other_particular, vch_type, other_amt_verified])
+                         other_ref_amount, f'{other_amount:.2f}', other_particular, vch_type, other_amt_verified])
 
         save_file_to_xls(data_list, header_list, './Processed_file.xlsx')
     except Exception as e:
