@@ -127,7 +127,7 @@ def process_file():
                          other_debtor,
                          other_ref_amount, other_amount, other_particular, vch_type, other_amt_verified])
 
-        save_file_to_xls(data_list, header_list, './sample_2.xlsx')
+        save_file_to_xls(data_list, header_list, './Processed_file.xlsx')
     except Exception as e:
         print(e)
 
