@@ -8,10 +8,7 @@ import os
 
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('process_file')
-_file_name = './Input.xml'
-tree = ET.parse(_file_name)
-root = tree.getroot()
-
+_file_name = './invalid_2.xml'
 old_date_format = '%Y%m%d'
 new_date_format = '%d-%m-%Y'
 
@@ -91,6 +88,8 @@ def process_file():
     :return: None
     """
     try:
+        tree = ET.parse(_file_name)
+        root = tree.getroot()
         print(f'[INFO] Processing File : {os.path.basename(_file_name)}')
         vouchers = root.findall('.//VOUCHER[@VCHTYPE="Receipt"]')
         if len(vouchers) > 0:
@@ -108,63 +107,72 @@ def process_file():
                 vch_type = 'Receipt'
                 amount_verified = ''
                 child_elements = entry.findall('ALLLEDGERENTRIES.LIST')
-                total_amount = get_ref_amount_sum(child_elements)
-                # parent_amount = float(entry.find('./ALLLEDGERENTRIES.LIST/AMOUNT').text)  # Amount header
-                parent_amount = total_amount
-                # logger.info(f'Parent_amount {parent_amount} & total_amount : {total_amount}')
-                if total_amount > 0:
-                    if parent_amount == total_amount:
-                        amount_verified = 'Yes'
-                    else:
-                        amount_verified = 'No'
+                if len(child_elements) >= 1:
+                    total_amount = get_ref_amount_sum(child_elements)
+                    # amount conversion to float
+                    # parent_amount = float(entry.find('./ALLLEDGERENTRIES.LIST/AMOUNT').text)  # Amount header
+                    parent_amount = total_amount
+                    # logger.info(f'Parent_amount {parent_amount} & total_amount : {total_amount}')
+                    if total_amount > 0:
+                        if parent_amount == total_amount:
+                            amount_verified = 'Yes'
+                        else:
+                            amount_verified = 'No'
 
-                data_list.append(
-                    [formatted_date, parent_transaction_type, vch_no, parent_ref_no, parent_ref_type, parent_ref_date,
-                     debtor, parent_ref_amount, f'{parent_amount:.2f}', parent_particulars, vch_type, amount_verified])
+                    data_list.append(
+                        [formatted_date, parent_transaction_type, vch_no, parent_ref_no, parent_ref_type, parent_ref_date,
+                         debtor, parent_ref_amount, f'{parent_amount:.2f}', parent_particulars, vch_type, amount_verified])
 
-                for child in child_elements:  # last entry is for other type
+                    for child in child_elements:
 
-                    other_or_child = child.find('ISDEEMEDPOSITIVE').text
-                    if other_or_child == 'No':  # Child entry
-                        child_debtor = ' '.join([x.capitalize() for x in child.find('LEDGERNAME').text.split(' ')])
-                        child_particulars = child_debtor
-                        child_recipt_type = 'Receipt'
-                        child_amount_verified = 'NA'
-                        bill_lists = child.findall('.//BILLALLOCATIONS.LIST')
-                        for bill in bill_lists:
-                            child_ref_no = bill.find('NAME').text
-                            child_ref_type = bill.find('BILLTYPE').text
-                            child_ref_amount = float(bill.find('AMOUNT').text)
-                            child_amount = 'NA'
-                            child_trans_type = 'Child'
-                            child_ref_date = ''
+                        other_or_child = child.find('ISDEEMEDPOSITIVE').text
+                        if other_or_child == 'No':  # Child entry
+                            child_debtor = ' '.join([x.capitalize() for x in child.find('LEDGERNAME').text.split(' ')])
+                            child_particulars = child_debtor
+                            child_recipt_type = 'Receipt'
+                            child_amount_verified = 'NA'
+                            bill_lists = child.findall('.//BILLALLOCATIONS.LIST')
+                            for bill in bill_lists:
+                                child_ref_no = bill.find('NAME').text
+                                child_ref_type = bill.find('BILLTYPE').text
+                                child_ref_amount = float(bill.find('AMOUNT').text)
+                                child_amount = 'NA'
+                                child_trans_type = 'Child'
+                                child_ref_date = ''
+                                data_list.append(
+                                    [formatted_date, child_trans_type, vch_no, child_ref_no, child_ref_type, child_ref_date,
+                                     child_debtor, f'{child_ref_amount:.2f}', child_amount, child_particulars, child_recipt_type,
+                                     child_amount_verified])
+                        elif other_or_child == 'Yes':  # other entry
+                            other_debtor = child.find('LEDGERNAME').text
+                            other_particular = other_debtor
+                            other_amount = float(child.find('AMOUNT').text)
+                            other_trans_type = 'Other'
+                            other_ref_amount = 'NA'
+                            other_ref_no = 'NA'
+                            other_ref_type = 'NA'
+                            other_amt_verified = 'NA'
+                            other_ref_date = 'NA'
                             data_list.append(
-                                [formatted_date, child_trans_type, vch_no, child_ref_no, child_ref_type, child_ref_date,
-                                 child_debtor, f'{child_ref_amount:.2f}', child_amount, child_particulars, child_recipt_type,
-                                 child_amount_verified])
-                    elif other_or_child == 'Yes':  # other entry
-                        other_debtor = child.find('LEDGERNAME').text
-                        other_particular = other_debtor
-                        other_amount = float(child.find('AMOUNT').text)
-                        other_trans_type = 'Other'
-                        other_ref_amount = 'NA'
-                        other_ref_no = 'NA'
-                        other_ref_type = 'NA'
-                        other_amt_verified = 'NA'
-                        other_ref_date = 'NA'
-                        data_list.append(
-                            [formatted_date, other_trans_type, vch_no, other_ref_no, other_ref_type, other_ref_date,
-                             other_debtor, other_ref_amount, f'{other_amount:.2f}', other_particular, vch_type, other_amt_verified])
+                                [formatted_date, other_trans_type, vch_no, other_ref_no, other_ref_type, other_ref_date,
+                                 other_debtor, other_ref_amount, f'{other_amount:.2f}', other_particular, vch_type, other_amt_verified])
 
+                else:
+                    print(f'[INFO] No Child Entries are present in xml')
+        else:
+            print(f'[INFO] No voucher type Receipt is present in xml')
+        if len(data_list) > 0:
             # save file using pandas
             # saved = save_file_to_xls(data_list, header_list, './Processed_file.xlsx')
 
-            #save file using xlsxwriter
+            # save file using xlsxwriter
             saved = save_to_file_using_xlsxwritre(data_list, column_header, './Processed_file_1.xlsx')
             if not saved:
                 logger.error(f'Error saving file')
             else:
                 print(f'[INFO] File Processing Completed')
+        else:
+            print(f'[INFO] Nothing there to save')
     except Exception as e:
         print(e)
         logger.error('Exception occurred', e)
