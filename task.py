@@ -8,7 +8,7 @@ import os
 
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('process_file')
-_file_name = './Input.xml'
+_file_name = './input.xml'
 old_date_format = '%Y%m%d'
 new_date_format = '%d-%m-%Y'
 
@@ -40,7 +40,7 @@ def save_file_to_xls(data, col, file_name):
     return saved
 
 
-def save_to_file_using_xlsxwritre(data, col, file_name):
+def save_to_file_using_xlsxwriter(data, col, file_name):
     """
     :param data: List of Lines
     :param col: columns header
@@ -156,7 +156,6 @@ def process_file():
                             data_list.append(
                                 [formatted_date, other_trans_type, vch_no, other_ref_no, other_ref_type, other_ref_date,
                                  other_debtor, other_ref_amount, f'{other_amount:.2f}', other_particular, vch_type, other_amt_verified])
-
                 else:
                     print(f'[INFO] No Child Entries are present in xml')
         else:
@@ -166,16 +165,16 @@ def process_file():
             # saved = save_file_to_xls(data_list, header_list, './Processed_file.xlsx')
 
             # save file using xlsxwriter
-            saved = save_to_file_using_xlsxwritre(data_list, column_header, './Processed_file.xlsx')
+            saved = save_to_file_using_xlsxwriter(data_list, column_header, './Processed_file.xlsx')
             if not saved:
                 logger.error(f'Error saving file')
             else:
                 print(f'[INFO] File Processing Completed')
         else:
-            print(f'[INFO] Nothing there to save')
+            print(f'[INFO] Nothing to save')
     except Exception as e:
         print(e)
-        logger.error('Exception occurred', e)
+        logger.error('Exception occurred: ', e)
 
 
 if __name__ == '__main__':
