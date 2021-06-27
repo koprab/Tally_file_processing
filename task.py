@@ -8,7 +8,7 @@ import os
 
 logging.basicConfig(level=logging.INFO, format='%(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('process_file')
-_file_name = './invalid_2.xml'
+_file_name = './Input.xml'
 old_date_format = '%Y%m%d'
 new_date_format = '%d-%m-%Y'
 
@@ -166,7 +166,7 @@ def process_file():
             # saved = save_file_to_xls(data_list, header_list, './Processed_file.xlsx')
 
             # save file using xlsxwriter
-            saved = save_to_file_using_xlsxwritre(data_list, column_header, './Processed_file_1.xlsx')
+            saved = save_to_file_using_xlsxwritre(data_list, column_header, './Processed_file.xlsx')
             if not saved:
                 logger.error(f'Error saving file')
             else:
